@@ -11,14 +11,16 @@ func routes(_ app: Application) throws {
             return RoutesController.getPlaceInformation(req: req)
         }
         
-        place.get("allAdventures") { req in
+        place.get("allPlacesWithAdventures") { req in
             Place.query(on: req.db).with(\.$adventures).all()
         }
         
-        place.post("newPlace") { req -> EventLoopFuture<Place> in
-            let place = try req.content.decode(Place.self)
-            return place.create(on: req.db)
-                .map { place }
+        place.get("allPlaces") { req in
+            return Place.query(on: req.db).all()
+        }
+        
+        place.post("newPlace") { req in
+            return try RoutesController.newPlace(req: req).unwrap(or: HTTPResponseStatus.badRequest as! Error)
         }
     }
     
@@ -35,7 +37,13 @@ func routes(_ app: Application) throws {
             return RoutesController.getAllAdventures(req: req)
         }
         adventure.post("newAdventure") { req in
-            return RoutesController.newAdventure(req: req)
+            return try RoutesController.newAdventure(req: req).unwrap(or: HTTPResponseStatus.badRequest as! Error)
         }
+        
+        adventure.delete("delete") { req -> Adventure in
+            RoutesController.delete(req: req)
+            return Adventure()
+        }
+        
     }
 }

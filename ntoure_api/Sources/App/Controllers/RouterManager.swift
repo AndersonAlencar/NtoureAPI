@@ -61,6 +61,18 @@ import Vapor
 
 class RoutesController {
     
+    static func newPlace(req: Request) throws -> EventLoopFuture<Place?>{
+        var place = Place()
+        do {
+            place = try req.content.decode(Place.self)
+        } catch {
+            print(error.localizedDescription)
+            throw(Abort(.badRequest))
+        }
+        return place.create(on: req.db)
+            .map { place }
+    }
+    
     static func getReducePlace(req: Request) -> EventLoopFuture<[ReducePlace]> {
         return Place.query(on: req.db).all().mapEach { (place) -> ReducePlace in
             ReducePlace(placeID: place.id!, photo: place.coverPhoto, name: place.namePlace, distance: place.distance)
@@ -84,16 +96,23 @@ class RoutesController {
         return Adventure.query(on: req.db).filter(\.$place.$id == id).range(..<2).all()
     }
     
-    static func newAdventure(req: Request) -> EventLoopFuture<Adventure> {
+    static func newAdventure(req: Request) throws -> EventLoopFuture<Adventure?> {
         var adventure = Adventure()
         do {
             adventure = try req.content.decode(Adventure.self)
         } catch {
             print(error.localizedDescription)
+            throw(Abort(HTTPResponseStatus.badRequest))
         }
         return adventure.create(on: req.db)
         .map { adventure }
         
     }
+    
+    static func delete(req: Request) -> EventLoopFuture<Void> {
+        return Adventure.query(on: req.db).filter(\.$activityName == "Parapente").delete()
+    }
+    
+    
 }
 

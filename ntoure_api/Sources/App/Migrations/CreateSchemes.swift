@@ -40,7 +40,7 @@ struct CreateAdventure: Migration {
             .field("phoneNumber", .string)
             .field("address", .string)
             .field("place_id", .uuid, .references("places", "id"))
-            .create()
+            .delete()
     }
 
     func revert(on database: Database) -> EventLoopFuture<Void> {
